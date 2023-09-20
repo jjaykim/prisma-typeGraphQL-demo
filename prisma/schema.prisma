@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  username     String
+  level        Int
+  xp           Int
+  coin         Int
+  createdAt    DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime      @updatedAt @db.Timestamptz(6)
+  chatMessages ChatMessage[]
+  rooms        Room[]
+  items        Item[]
+}
+
+model Room {
+  id            Int            @id @default(autoincrement())
+  user          User           @relation(fields: [userId], references: [id])
+  userId        Int
+  createdAt     DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime       @updatedAt @db.Timestamptz(6)
+  chatMessages  ChatMessage[]
+  itemLocations ItemLocation[]
+  items         Item[]
+}
+
+model Item {
+  id             Int            @id @default(autoincrement())
+  name           String
+  itemCategory   ItemCategory   @relation(fields: [itemCategoryId], references: [id])
+  itemLocation   ItemLocation[]
+  user           User[]
+  room           Room[]
+  itemCategoryId Int
+}
+
+model ItemCategory {
+  id    Int    @id @default(autoincrement())
+  name  String
+  items Item[]
+}
+
+model ItemLocation {
+  id           Int          @id @default(autoincrement())
+  item         Item         @relation(fields: [itemId], references: [id])
+  room         Room         @relation(fields: [roomId], references: [id])
+  locationType LocationType
+  x            Int
+  y            Int
+
+  itemId Int
+  roomId Int
+
+  @@unique([roomId, itemId])
+}
+
+enum LocationType {
+  FLOOR
+  WALL
+}
+
+model ChatMessage {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  room      Room     @relation(fields: [roomId], references: [id])
+  userId    Int
+  roomId    Int
+  message   String
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+}
